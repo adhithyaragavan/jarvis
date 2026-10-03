@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>J.A.R.V.I.S. — Stark Command Centre</title>
+  <meta name="theme-color" content="#04070a" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='13' fill='none' stroke='%2300e5ff' stroke-width='3'/%3E%3Ccircle cx='16' cy='16' r='5' fill='%2339ff88'/%3E%3C/svg%3E" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="bg-grid" aria-hidden="true"></div>
+  <div class="bg-scan" aria-hidden="true"></div>
+
+  <header class="hud-top">
+    <div class="brand">
+      <svg class="reactor" viewBox="0 0 100 100" aria-hidden="true">
+        <circle class="r-outer" cx="50" cy="50" r="44" />
+        <circle class="r-ring" cx="50" cy="50" r="34" />
+        <g class="r-spokes">
+          <rect x="47" y="10" width="6" height="14" /><rect x="47" y="76" width="6" height="14" />
+          <rect x="10" y="47" width="14" height="6" /><rect x="76" y="47" width="14" height="6" />
+          <rect x="47" y="10" width="6" height="14" transform="rotate(45 50 50)" />
+          <rect x="47" y="10" width="6" height="14" transform="rotate(135 50 50)" />
+          <rect x="47" y="10" width="6" height="14" transform="rotate(225 50 50)" />
+          <rect x="47" y="10" width="6" height="14" transform="rotate(315 50 50)" />
+        </g>
+        <circle class="r-core" cx="50" cy="50" r="13" />
+      </svg>
+      <div>
+        <h1>J.A.R.V.I.S.</h1>
+        <p class="sub">Stark Industries · Doomsday Protocol</p>
+      </div>
+    </div>
+
+    <div class="status-cluster">
+      <div class="core-status" id="coreStatus" title="JARVIS core">
+        <span class="pulse"></span><span class="label">ONLINE</span>
+      </div>
+      <button class="chip" id="chipAi" data-state="loading" title="AI core"><i></i><span>AI CORE</span></button>
+      <button class="chip" id="chipGoogle" data-state="loading" title="Google Calendar & Drive"><i></i><span>GOOGLE</span></button>
+      <button class="chip" id="chipTelegram" data-state="loading" title="Telegram"><i></i><span>TELEGRAM</span></button>
+      <div class="clock mono" id="clock">--:--:--</div>
+    </div>
+  </header>
+
+  <nav class="mobile-switch" role="tablist" aria-label="View">
+    <button class="active" data-view="console" role="tab">Console</button>
+    <button data-view="preview" role="tab">Live Preview <b id="mobileBadge" hidden></b></button>
+  </nav>
+
+  <main class="layout" id="layout" data-view="console">
+    <!-- ================= LEFT: command console ================= -->
+    <section class="panel console" aria-label="Command console">
+      <div class="panel-head">
+        <span class="tag">01</span><h2>Command Console</h2>
+        <span class="spacer"></span>
+        <button class="icon-btn" id="voiceToggle" title="Toggle spoken responses" aria-pressed="false">
+          <svg viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12"/></svg>
+        </button>
+        <button class="icon-btn" id="clearChat" title="Clear console">
+          <svg viewBox="0 0 24 24"><path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13"/></svg>
+        </button>
+      </div>
+
+      <div class="log" id="log" aria-live="polite">
+        <div class="welcome" id="welcome">
+          <div class="big-reactor" aria-hidden="true"><span></span><span></span><span></span><i></i></div>
+          <h3>Good to see you, sir.</h3>
+          <p>All systems nominal. Tell me what you need — I can schedule, remind, archive, search and communicate. Chain them together and I'll run them in sequence.</p>
+          <div class="suggestions" id="suggestions">
+            <button>Schedule a meeting with Bruce Banner tomorrow at 4 PM</button>
+            <button>Remind me to check the Mark 50 at 7 PM</button>
+            <button>What do I have scheduled for tomorrow?</button>
+            <button>Find the reactor design report</button>
+            <button>Upload this research report to my Drive</button>
+            <button>Schedule the Stark team meeting for tomorrow at 6 PM, remind me 30 minutes before it, and send Bruce a Telegram message about it</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="queue" id="queue" hidden>
+        <div class="queue-head"><span class="mono">EXECUTION QUEUE</span><span class="mono" id="queueCount"></span></div>
+        <ol id="queueList"></ol>
+      </div>
+
+      <form class="composer" id="composer" autocomplete="off">
+        <div class="mode" role="radiogroup" aria-label="When JARVIS is busy">
+          <span class="mode-label mono">WHEN BUSY</span>
+          <label><input type="radio" name="mode" value="queue" checked /><span>Queue</span></label>
+          <label><input type="radio" name="mode" value="interrupt" /><span>Interrupt</span></label>
+          <span class="pending-hint mono" id="pendingHint" hidden>AWAITING YOUR ANSWER</span>
+        </div>
+        <div class="input-row">
+          <button type="button" class="icon-btn mic" id="micBtn" title="Speak a command">
+            <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+          </button>
+          <textarea id="input" rows="1" placeholder="Speak or type a command, sir…" aria-label="Command"></textarea>
+          <button type="submit" class="send" id="sendBtn" title="Execute (Enter)">
+            <svg viewBox="0 0 24 24"><path d="M4 12h14M13 6l6 6-6 6"/></svg>
+          </button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ================= RIGHT: live integration preview ================= -->
+    <section class="panel preview" aria-label="Live integration preview">
+      <div class="panel-head">
+        <span class="tag">02</span><h2>Live Integration Preview</h2>
+        <span class="spacer"></span>
+        <span class="sync mono" id="syncState">SYNCED</span>
+      </div>
+      <div class="tabs" role="tablist" id="tabs">
+        <button role="tab" data-tab="calendar" class="active"><span class="dot cal"></span>Calendar</button>
+        <button role="tab" data-tab="reminders"><span class="dot rmd"></span>Reminders <b class="count" id="remCount"></b></button>
+        <button role="tab" data-tab="drive"><span class="dot drv"></span>Drive</button>
+        <button role="tab" data-tab="comms"><span class="dot com"></span>Comms</button>
+        <button role="tab" data-tab="activity"><span class="dot act"></span>Activity</button>
+      </div>
+
+      <div class="tab-body" id="tab-calendar" data-active></div>
+      <div class="tab-body" id="tab-reminders"></div>
+      <div class="tab-body" id="tab-drive"></div>
+      <div class="tab-body" id="tab-comms"></div>
+      <div class="tab-body" id="tab-activity"></div>
+    </section>
+  </main>
+
+  <!-- ================= dialogs ================= -->
+  <dialog class="hud-dialog" id="confirmDialog">
+    <form method="dialog">
+      <div class="dlg-head"><span class="warn-ico">!</span><h3 id="confirmTitle">Confirm action</h3></div>
+      <p class="dlg-sub mono">AUTHORISATION REQUIRED</p>
+      <div id="confirmDetail" class="dlg-detail"></div>
+      <label id="confirmEditWrap" hidden>
+        <span class="mono small">MESSAGE (EDITABLE)</span>
+        <textarea id="confirmEdit" rows="3"></textarea>
+      </label>
+      <div class="dlg-actions">
+        <button value="cancel" class="btn ghost">Abort</button>
+        <button value="ok" class="btn primary" id="confirmOk">Authorise</button>
+      </div>
+    </form>
+  </dialog>
+
+  <dialog class="hud-dialog wide" id="uploadDialog">
+    <form method="dialog" id="uploadForm">
+      <div class="dlg-head"><span class="warn-ico up">↑</span><h3>Stark Archive Uplink</h3></div>
+      <p class="dlg-sub mono">GOOGLE DRIVE · SECURE TRANSFER</p>
+
+      <label class="drop" id="dropZone">
+        <input type="file" id="fileInput" hidden />
+        <svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5M4 16v4h16v-4"/></svg>
+        <span id="dropText">Drop a document here or <u>browse your device</u></span>
+      </label>
+
+      <fieldset class="dest">
+        <legend class="mono small">DESTINATION</legend>
+        <label class="radio"><input type="radio" name="dest" value="existing" checked /> Existing folder</label>
+        <select id="folderSelect"><option value="root">My Drive</option></select>
+        <label class="radio"><input type="radio" name="dest" value="new" /> Create new folder</label>
+        <div class="newfolder">
+          <input id="newFolderName" placeholder="New folder name" />
+          <span class="mono small">inside</span>
+          <select id="newFolderParent"><option value="root">My Drive</option></select>
+        </div>
+      </fieldset>
+
+      <div class="progress" id="uploadProgress" hidden>
+        <div class="bar"><span id="uploadBar"></span></div>
+        <div class="mono small" id="uploadStatus">Standing by</div>
+      </div>
+
+      <div class="dlg-actions">
+        <button value="cancel" class="btn ghost" id="uploadCancel">Cancel</button>
+        <button type="button" class="btn primary" id="uploadGo">Upload to Drive</button>
+      </div>
+    </form>
+  </dialog>
+
+  <div class="alerts" id="alerts" aria-live="assertive"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>

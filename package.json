@@ -1,0 +1,26 @@
+{
+  "name": "jarvis",
+  "version": "1.0.0",
+  "description": "JARVIS - Stark personal AI command centre",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.131.0",
+    "chrono-node": "^2.10.2",
+    "dotenv": "^18.0.5",
+    "express": "^5.2.1",
+    "googleapis": "^183.0.0",
+    "multer": "^2.4.0"
+  }
+}
